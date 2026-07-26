@@ -7,6 +7,7 @@ const SEARCH_ENGINES = {
 };
 
 const SELECTED_DATE_KEY = "apod-selected-date";
+const APOD_CACHE_PREFIX = "apod-cache-";
 const ONE_DAY_MS = 24 * 60 * 60 * 1000;
 const BASE_URL = "https://api.nasa.gov/planetary/apod";
 
@@ -77,7 +78,18 @@ datePicker.min = APOD_START_DATE;
 datePicker.max = todayStr;
 datePicker.value = savedDate || yesterdayStr;
 
+
+
 async function fetchAPOD(selectedDate = "") {
+  const dateKey = selectedDate || todayStr;
+  const cached = getCachedAPOD(dateKey);
+
+  if (cached) {
+    renderAPOD(cached);
+    return;
+  }
+
+
   titleEl.textContent = "Loading...";
   document.body.classList.add("bg-loading");
 
@@ -89,13 +101,15 @@ async function fetchAPOD(selectedDate = "") {
     const data = await response.json();
 
     if (!response.ok) {
-      throw new Error(data.msg || `Request failed with status ${response.status}`);
+      throw new Error(data.msg || `Request failed, status: ${response.status}`);
     }
 
+    setCachedAPOD(dateKey, data);
     renderAPOD(data);
   } catch (error) {
-    titleEl.textContent = "Couldn't load image";
     document.body.classList.remove("bg-loading");
+    titleEl.textContent =  `Error Loading Image, ${error.message}`;
+    console.log(error);
   }
 }
 
@@ -125,6 +139,24 @@ function renderAPOD(data) {
 }
 
 fetchAPOD(savedDate || yesterdayStr);
+
+function getCachedAPOD(date) {
+  const raw = localStorage.getItem(APOD_CACHE_PREFIX + date);
+  if (!raw) return null;
+  try {
+    return JSON.parse(raw);
+  } catch {
+    return null;
+  }
+}
+
+function setCachedAPOD(date, data) {
+  try {
+    localStorage.setItem(APOD_CACHE_PREFIX + date, JSON.stringify(data));
+  } catch {
+    return;
+  }
+}
 
 searchForm.addEventListener("submit", (e) => {
   e.preventDefault();

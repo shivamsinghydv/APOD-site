@@ -12,7 +12,9 @@
 
 ### To view and edit locally, follow these steps:
 
-## You need to have [Node.js](https://nodejs.org/en/) installed on your machine.
+## Pre-requisites
+- NodeJS
+- NASA API key
 
 ```bash
 git clone https://github.com/shivamsinghydv/APOD-site.git
